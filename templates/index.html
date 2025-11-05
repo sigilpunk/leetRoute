@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <style>
+        div {
+            width: 25%;
+            border: 2px solid black;
+            padding: 2em;
+            margin: .5em;
+        }
+
+        .search-results {
+            height: 30em;
+            overflow-y: scroll;
+        }
+
+        .search-result {
+            border: 2px solid black;
+            border-radius: 5px;
+            padding: 1em;
+            transition: all ease-in-out 0.1s;
+        }
+
+        .search-result:hover {
+            border: 2px solid black;
+            border-radius: 5px;
+            padding: 1em;
+            background-color: #bbb;
+            transform: translateY(-5px);
+        }
+
+        form#locations-form {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="locations-form-div">
+        <form id="locations-form" action="/" method="get">
+            <label for="start-loc">Start Location:</label>
+            <input type="text" id="start-loc" name="s">
+            <label for="dest-loc">Destination Location:</label>
+            <input type="text" id="dest-loc" name="d">
+            <input type="submit" value="Calculate Route(s)">
+        </form>
+    </div>
+    {% if start_res and dest_res %}
+        <div class="search-results">
+            <h3>Start Location Results</h3>
+            {% for choice in start_res.choices %}
+                <p class="search-result">{{ choice[0] }}</p>
+            {% endfor %}
+        </div>
+        <div class="search-results">
+            <h3>Destination Location Results</h3>
+            {% for choice in dest_res.choices %}
+                <p class="search-result">{{ choice[0] }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <script>
+        document.querySelectorAll(".search-result").forEach((e)=>{e.onclick = ()=>{alert("hi")}}) 
+    </script>
+</body>
+
+</html>

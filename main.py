@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from os import getenv
 import json
 import polyline
-import simplekml
+import simplek
 import dataclasses
 from pathlib import Path
 from typing import Self, Literal
@@ -153,6 +153,20 @@ class Directions:
 
 
 def get_directions(start: Location, dest: Location, debug: bool=False, units: Literal["m", "km", "mi"]="mi") -> Directions:
+    """
+    Get directions from Openroute Service
+
+    Args:
+        start (Location): Starting location
+        dest (Location): Destination location
+        debug (bool, optional): Save response from the API to a file. Defaults to False.
+        units (Literal[&quot;m&quot;, &quot;km&quot;, &quot;mi&quot;], optional): Units to get response in. Defaults to "mi".
+
+    Returns:
+        Directions
+    """
+    
+    
     coords = (start.coords.to_tuple(), dest.coords.to_tuple())
     directions = ors_directions(
         client=ors,

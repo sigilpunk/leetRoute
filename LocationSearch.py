@@ -5,6 +5,7 @@ import json
 from dataclasses import dataclass, asdict
 from enum import Enum
 import math
+from strip_ansi import strip_ansi
 
 class DistanceUnit(Enum):
     MILES = "miles"
@@ -63,6 +64,17 @@ class Location:
 
 
 def search_map(query: str, priority_pos: Optional[tuple[float, float]] = None, limit: int = 15) -> dict[str, Any]:
+    """Perform a reverse-geocode search using Komoot Photon
+
+    Args:
+        query (str): Query to search
+        priority_pos (Optional[tuple[float, float]], optional): Set a location to prioritize results that are near. Normal sorting is applied if left blank or set to `False` Defaults to None.
+        limit (int, optional): How many search results to return (max 50). Defaults to 15.
+
+    Returns:
+        dict[str, Any]
+    """
+    
     url = "https://photon.komoot.io/api/"
     params = {
         "q": query,
@@ -85,7 +97,7 @@ def search_map(query: str, priority_pos: Optional[tuple[float, float]] = None, l
     return res
 
 
-def format_results(results: dict[str, Any]) -> tuple[list[dict[str, Any]], list[Location]]:
+def format_results(results: dict[str, Any], ansi: bool=True) -> tuple[list[dict[str, Any]], list[Location]]:
     """
     Returns a tuple (question_dicts, locations_list).
     question_dicts: list of question-definition dicts (each has 'kind', 'name', etc).
@@ -211,7 +223,7 @@ def format_results(results: dict[str, Any]) -> tuple[list[dict[str, Any]], list[
         locations.append(loc)
 
     # Build choices as (label, index) pairs so the prompt returns the index
-    choices = [(loc.displayname, idx) for idx, loc in enumerate(locations)]
+    choices = [(loc.displayname if ansi else loc.name, idx) for idx, loc in enumerate(locations)]
 
     question_dicts = [
         {
