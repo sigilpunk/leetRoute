@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <style>
+        div {
+            width: 25%;
+            border: 2px solid black;
+            padding: 2em;
+            margin: .5em;
+        }
+
+        .error-block {
+            border: 4px solid red;
+            color: #622;
+        }
+
+        .search-results {
+            height: 30em;
+            overflow-y: scroll;
+        }
+
+        .search-result {
+            border: 2px solid black;
+            border-radius: 5px;
+            padding: 1em;
+            transition: all ease-in-out 0.1s;
+        }
+
+        .search-result:hover {
+            background-color: #bbb;
+            transform: translateY(-5px);
+        }
+
+        .search-result:active {
+            background-color: #ddd;
+            transform: translateY(2px);
+        }
+
+        form#locations-form {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="locations-form-div">
+        <form id="locations-form" action="/" method="get">
+            <label for="start-loc">Start Location:</label>
+            <input type="text" id="start-loc" name="s">
+            <label for="dest-loc">Destination Location:</label>
+            <input type="text" id="dest-loc" name="d">
+            <input type="submit" id="search-button" value="Search Locations">
+        </form>
+    </div>
+    {% if start_res and dest_res %}
+        <div class="search-results" id="start-results" submitted="false">
+            <h3>Start Location Results</h3>
+            {% for choice in start_res.choices %}
+                <p class="search-result" resulttype="start" index="{{ choice[1] }}">{{ choice[0] }}</p>
+            {% endfor %}
+        </div>
+        <div class="search-results" id="dest-results" submitted="false">
+            <h3>Destination Location Results</h3>
+            {% for choice in dest_res.choices %}
+                <p class="search-result" resulttype="dest" index="{{ choice[1] }}">{{ choice[0] }}</p>
+            {% endfor %}
+        </div>
+    {% elif start_res and not dest_res %}
+        <div class="error-block">
+            <h3>:(</h3>
+            <p>Please provide both locations</p>
+        </div>
+    {% elif dest_res and not start_res %}
+        <div class="error-block">
+            <h3>:(</h3>
+            <p>Please provide both locations</p>
+        </div>
+    {% endif %}
+    <script>
+        document.querySelector("input#search-button")
+        document.querySelectorAll(".search-result").forEach((element)=>{
+            element.onclick = function resultClick(e){
+                let loctype = e.target.attributes.resulttype.value;
+                let index = e.target.attributes.index.value
+                fetch(`/getLocationByIndex?i=${index}&t=${loctype}`)
+                    .then(resp=> {
+                        if(!resp.ok) {
+                            throw new Error(`HTTP error! Status code: ${resp.status}; ${resp.statusText}`);
+                        }
+                        return resp.json();
+                    })
+                    .then(data => {
+                        console.log(data);
+                        e.target.parentNode.setAttribute("submitted", "true")
+                    })
+                    .catch(error => {
+                        console.error('Error fetching data:', error); // Handle errors
+                    });
+                };
+                let startResDiv = document.querySelector("div#start-results");
+                let destResDiv = document.querySelector("div#dest-results");
+                // let startResDivSubmitted = (startResDiv.attributes.submitted.value === "true");
+                // let destResDivSubmitted = (destResDiv.attributes.submitted.value === "true");
+                // if(startResDivSubmitted && destResDivSubmitted){
+                //     startResDiv.style.display = "none";
+                //     destResDiv.style.display = "none";
+                // }
+            });
+    </script>
+</body>
+
+</html>
