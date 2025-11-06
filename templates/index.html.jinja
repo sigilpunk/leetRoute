@@ -6,19 +6,37 @@
     <style>
         div {
             width: 25%;
+            margin: .5em;
+        }
+
+        #locations-form-div {
             border: 2px solid black;
             padding: 2em;
-            margin: .5em;
         }
 
         .error-block {
             border: 4px solid red;
             color: #622;
+            padding: 2em;
         }
 
         .search-results {
             height: 30em;
             overflow-y: scroll;
+            padding: 2em;
+            border: 2px solid black;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-header {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 9999;
+            width: 100%;
+            border-bottom: 2px solid black;
+            margin: 0;
         }
 
         .search-result {
@@ -57,13 +75,17 @@
     </div>
     {% if start_res and dest_res %}
         <div class="search-results" id="start-results" submitted="false">
-            <h3>Start Location Results</h3>
+            <div class="search-header">
+                <h3>Start Location Results</h3>
+            </div>
             {% for choice in start_res.choices %}
                 <p class="search-result" resulttype="start" index="{{ choice[1] }}">{{ choice[0] }}</p>
             {% endfor %}
         </div>
         <div class="search-results" id="dest-results" submitted="false">
-            <h3>Destination Location Results</h3>
+            <div class="search-header">
+                <h3>Destination Location Results</h3>
+            </div>
             {% for choice in dest_res.choices %}
                 <p class="search-result" resulttype="dest" index="{{ choice[1] }}">{{ choice[0] }}</p>
             {% endfor %}
