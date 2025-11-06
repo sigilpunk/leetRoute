@@ -93,7 +93,7 @@
                         return resp.json();
                     })
                     .then(data => {
-                        console.log(data);
+                        console.table(data);
                         e.target.parentNode.setAttribute("submitted", "true")
                     })
                     .catch(error => {
