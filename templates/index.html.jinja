@@ -7,6 +7,8 @@
         div {
             width: 25%;
             margin: .5em;
+            box-shadow: 2px 2px 10px #0002;
+            border-radius: 5px;
         }
 
         #locations-form-div {
@@ -102,6 +104,9 @@
         </div>
     {% endif %}
     <script>
+        let startCoords = null;
+        let destCoords = null;
+
         document.querySelector("input#search-button")
         document.querySelectorAll(".search-result").forEach((element)=>{
             element.onclick = function resultClick(e){
@@ -115,15 +120,25 @@
                         return resp.json();
                     })
                     .then(data => {
-                        console.table(data);
-                        e.target.parentNode.setAttribute("submitted", "true")
+
+
+                        if (data.loctype === "start") {
+                            startCoords = data.coords
+                        } else if (data.loctype === "dest") {
+                            destCoords = data.coords
+                        }
+                        console.log(startCoords, destCoords)
+                        // e.target.parentNode.setAttribute("submitted", "true")
+                        if (startCoords && destCoords){
+                            showCalculateButton()
+                        }
                     })
                     .catch(error => {
                         console.error('Error fetching data:', error); // Handle errors
                     });
                 };
-                let startResDiv = document.querySelector("div#start-results");
-                let destResDiv = document.querySelector("div#dest-results");
+                // let startResDiv = document.querySelector("div#start-results");
+                // let destResDiv = document.querySelector("div#dest-results");
                 // let startResDivSubmitted = (startResDiv.attributes.submitted.value === "true");
                 // let destResDivSubmitted = (destResDiv.attributes.submitted.value === "true");
                 // if(startResDivSubmitted && destResDivSubmitted){
@@ -131,6 +146,22 @@
                 //     destResDiv.style.display = "none";
                 // }
             });
+
+        function showCalculateButton() {
+            let locationsFormDiv = document.getElementById("locations-form-div");
+            let calculateButton = document.createElement("input");
+            let calculateDiv = document.createElement("div");
+            calculateButton.setAttribute("type", "button");
+            calculateButton.setAttribute("id", "calculate-button");
+            calculateButton.setAttribute("value", "Calculate\u0020Route(s)");
+            calculateButton.onclick = ()=>{
+                window.location.assign(`/calculate?s=${startCoords.lon},${startCoords.lat}&d=${destCoords.lon},${destCoords.lat}`)
+            }
+            calculateButton.setAttribute
+            calculateDiv.setAttribute("id", "calculate-div");
+            calculateDiv.append(calculateButton);
+            locationsFormDiv.appendChild(calculateDiv);
+        }
     </script>
 </body>
 

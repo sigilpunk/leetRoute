@@ -1,12 +1,15 @@
 from flask import *
 from LocationSearch import search_map, format_results
+from engine import main as get_and_export_directions, Point
+import json
+from pathlib import Path
 
 app = Flask(__name__)
 app.debug = True
 start_results = None
 dest_results = None
 
-@app.route("/")
+@app.route("/", methods=["GET"])
 def index():
     global start_results, dest_results
 
@@ -24,7 +27,7 @@ def index():
     
     return render_template('index.html.jinja', start_res=ex_sr, dest_res=ex_dr)
 
-@app.route("/getLocationByIndex")
+@app.route("/getLocationByIndex", methods=["GET"])
 def get_location_by_index():
     args = request.args
     index = args.get("i")
@@ -42,15 +45,44 @@ def get_location_by_index():
     if not results:
         return {}
 
-    question_dicts, locations = format_results(results)
+    _, locations = format_results(results)
     chosen_location = locations[int(index)]
 
     # coordinates = ', '.join(str(n) for n in chosen_location.coords.to_tuple())
     coords = chosen_location.coords
     coords = {
-        "lat": coords.lat,
-        "lon": coords.lon
+        "loctype": loctype,
+        "coords": {
+            "lat": coords.lat,
+            "lon": coords.lon
+        }
     }
     return coords
+
+@app.route("/calculate", methods=["GET"])
+def calculate_page():
+    args = request.args
+    start = args.get("s")
+    dest  = args.get("d")
+    
+    if start and dest:
+        slon, slat = start.split(",")
+        dlon, dlat = dest.split(",")
+        sp = Point(slon, slat)
+        dp = Point(dlon, dlat)
+        results = get_and_export_directions(start=sp, dest=dp)
+    else:
+        results = {}
+    
+    return render_template('calculate.html.jinja', results=json.dumps(results))
+
+@app.route("/exports/<path:filename>", methods=["GET"])
+def download(filename: str):
+    print(filename)
+    # filepath = Path(filepath)
+    # filename = filepath.name
+    # filepath = Path(filepath).parts[:-1]
+    filepath = Path(app.root_path).joinpath("exports")
+    return send_from_directory(filepath, filename)
 
 app.run()
