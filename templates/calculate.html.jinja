@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <style>
+        div {
+            margin: .5em;
+            border-radius: 5px;
+        }
+        
+        .files{
+            display: flex;
+        }
+
+        .entry{
+            border: 2px solid black;
+            box-shadow: 2px 2px 10px #0002;
+            padding: 0.5em;
+        }
+
+        .entry button {
+            align-self: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="files">
+    </div>
+    <script>
+        let results = {{ results }};
+        let filesDiv = document.getElementById("files");
+        // let googleMapsUrl = results.google_maps_url;
+        // let kml = results.kml;
+        // let gpx = results.gpx;
+        // let json = results.json;
+        for(key in results){
+            let entryDiv = document.createElement("div");
+            let textDiv = document.createElement("div");
+            let buttonDiv = document.createElement("div");
+            let entryButton = document.createElement("button");
+            let entryText = document.createElement("p");
+            
+            entryText.textContent = `${key}:`;
+            entryButton.textContent = (key === "Google Maps") ? "View" : "Download";
+            entryDiv.style.display = "flex";
+            entryDiv.classList.add("entry");
+
+            textDiv.appendChild(entryText);
+            buttonDiv.appendChild(entryButton);
+
+            entryDiv.appendChild(textDiv);
+            entryDiv.appendChild(buttonDiv);
+            filesDiv.appendChild(entryDiv);
+        }
+    </script>
+</body>
+
+</html>
