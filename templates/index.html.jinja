@@ -3,42 +3,140 @@
 
 <head>
     <meta charset="utf-8">
+    <title>leetRoute - Home</title>
+    <link rel="icon" href="{{ url_for('static', filename='/images/favicon.ico') }}">
     <style>
-        div {
-            width: 25%;
-            margin: .5em;
-            box-shadow: 2px 2px 10px #0002;
-            border-radius: 5px;
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            background: #fafafa;
+        }
+
+        #header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5em;
+            padding: 1.2em 2em;
+            background: #fff;
+            box-shadow: 0 2px 10px #0001;
+            margin-bottom: 2em;
+        }
+
+        #header-logo {
+            height: 2em;
+        }
+
+        #header h1 {
+            margin: 0;
+            font-size: 1.4em;
+            font-weight: 600;
         }
 
         #locations-form-div {
             border: 2px solid black;
+            border-radius: 6px;
+            background: #fff;
+            box-shadow: 2px 2px 10px #0002;
             padding: 2em;
+            width: 90%;
+            max-width: 600px;
+            margin: 0 auto 2em auto;
+        }
+
+        form#locations-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75em;
+        }
+
+        form#locations-form label {
+            font-weight: bold;
+        }
+
+        form#locations-form input[type="text"] {
+            border: 1px solid #888;
+            border-radius: 4px;
+            padding: 0.5em;
+            font-size: 1em;
+        }
+
+        #search-button {
+            background: #0078d7;
+            color: white;
+            border: none;
+            padding: 0.6em 1em;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 0.5em;
+        }
+
+        #search-button:hover {
+            background: #005ea6;
+        }
+
+        #calculate-div {
+            margin-top: 1em;
+            display: flex;
+            justify-content: center;
+        }
+
+        #calculate-button {
+            background: #0078d7;
+            color: white;
+            border: none;
+            padding: 0.6em 1.2em;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        #calculate-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #calculate-button:hover:enabled {
+            background: #005ea6;
         }
 
         .error-block {
-            border: 4px solid red;
+            border: 3px solid red;
             color: #622;
+            background: #fff;
+            border-radius: 6px;
+            box-shadow: 2px 2px 10px #0002;
             padding: 2em;
+            width: 90%;
+            max-width: 600px;
+            margin: 0 auto 2em auto;
+            text-align: center;
         }
 
         .search-results {
             height: 30em;
-            overflow-y: scroll;
-            padding: 2em;
+            overflow-y: auto;
+            padding: 1em;
             border: 2px solid black;
+            border-radius: 6px;
+            background: #fff;
+            box-shadow: 2px 2px 10px #0002;
             display: flex;
             flex-direction: column;
+            gap: 0.75em;
+            width: 90%;
+            max-width: 600px;
+            margin: 0 auto 2em auto;
         }
 
         .search-header {
             position: sticky;
             top: 0;
             background: #fff;
-            z-index: 9999;
-            width: 100%;
             border-bottom: 2px solid black;
-            margin: 0;
+            margin-bottom: 0.5em;
+            padding: 0.5em;
         }
 
         .search-result {
@@ -46,35 +144,47 @@
             border-radius: 5px;
             padding: 1em;
             transition: all ease-in-out 0.1s;
+            cursor: pointer;
+        }
+
+        .search-result.selected {
+            background-color: #9f9;
         }
 
         .search-result:hover {
             background-color: #bbb;
-            transform: translateY(-5px);
+            transform: translateY(-3px);
         }
 
         .search-result:active {
             background-color: #ddd;
-            transform: translateY(2px);
-        }
-
-        form#locations-form {
-            display: flex;
-            flex-direction: column;
+            transform: translateY(1px);
         }
     </style>
 </head>
 
 <body>
+    <div id="header">
+        <a href="/"><img id="header-logo" src="{{ url_for('static', filename='/images/favicon.ico') }}"></a>
+        <h1>leetRoute v{{ version }}</h1>
+    </div>
+
     <div id="locations-form-div">
         <form id="locations-form" action="/" method="get">
             <label for="start-loc">Start Location:</label>
             <input type="text" id="start-loc" name="s">
+
             <label for="dest-loc">Destination Location:</label>
             <input type="text" id="dest-loc" name="d">
+
             <input type="submit" id="search-button" value="Search Locations">
         </form>
+
+        <div id="calculate-div">
+            <input type="button" id="calculate-button" value="Calculate Route(s)" disabled>
+        </div>
     </div>
+
     {% if start_res and dest_res %}
         <div class="search-results" id="start-results" submitted="false">
             <div class="search-header">
@@ -84,6 +194,7 @@
                 <p class="search-result" resulttype="start" index="{{ choice[1] }}">{{ choice[0] }}</p>
             {% endfor %}
         </div>
+
         <div class="search-results" id="dest-results" submitted="false">
             <div class="search-header">
                 <h3>Destination Location Results</h3>
@@ -103,65 +214,50 @@
             <p>Please provide both locations</p>
         </div>
     {% endif %}
+
     <script>
         let startCoords = null;
         let destCoords = null;
+        let calculateButton = document.getElementById("calculate-button");
 
-        document.querySelector("input#search-button")
-        document.querySelectorAll(".search-result").forEach((element)=>{
-            element.onclick = function resultClick(e){
-                let loctype = e.target.attributes.resulttype.value;
-                let index = e.target.attributes.index.value
+        calculateButton.onclick = () => {
+            window.location.assign(`/calculate?s=${startCoords.lon},${startCoords.lat}&d=${destCoords.lon},${destCoords.lat}`);
+        };
+
+        function checkSelected() {
+            let startResults = document.querySelectorAll('.search-result[resulttype="start"]');
+            let destResults = document.querySelectorAll('.search-result[resulttype="dest"]');
+            let startSelected = Array.from(startResults).some(e => e.classList.contains("selected"));
+            let destSelected = Array.from(destResults).some(e => e.classList.contains("selected"));
+            return startSelected && destSelected;
+        }
+
+        document.querySelectorAll(".search-result").forEach((element) => {
+            element.onclick = function (e) {
+                let loctype = e.target.getAttribute("resulttype");
+                let index = e.target.getAttribute("index");
+
+                e.target.classList.toggle("selected");
                 fetch(`/getLocationByIndex?i=${index}&t=${loctype}`)
-                    .then(resp=> {
-                        if(!resp.ok) {
+                    .then(resp => {
+                        if (!resp.ok) {
                             throw new Error(`HTTP error! Status code: ${resp.status}; ${resp.statusText}`);
                         }
                         return resp.json();
                     })
                     .then(data => {
-
-
-                        if (data.loctype === "start") {
-                            startCoords = data.coords
-                        } else if (data.loctype === "dest") {
-                            destCoords = data.coords
+                        if (data.loctype === "start" && e.target.classList.contains("selected")) {
+                            startCoords = data.coords;
+                        } else if (data.loctype === "dest" && e.target.classList.contains("selected")) {
+                            destCoords = data.coords;
                         }
-                        console.log(startCoords, destCoords)
-                        // e.target.parentNode.setAttribute("submitted", "true")
-                        if (startCoords && destCoords){
-                            showCalculateButton()
-                        }
+                        calculateButton.disabled = !checkSelected();
                     })
                     .catch(error => {
-                        console.error('Error fetching data:', error); // Handle errors
+                        console.error('Error fetching data:', error);
                     });
-                };
-                // let startResDiv = document.querySelector("div#start-results");
-                // let destResDiv = document.querySelector("div#dest-results");
-                // let startResDivSubmitted = (startResDiv.attributes.submitted.value === "true");
-                // let destResDivSubmitted = (destResDiv.attributes.submitted.value === "true");
-                // if(startResDivSubmitted && destResDivSubmitted){
-                //     startResDiv.style.display = "none";
-                //     destResDiv.style.display = "none";
-                // }
-            });
-
-        function showCalculateButton() {
-            let locationsFormDiv = document.getElementById("locations-form-div");
-            let calculateButton = document.createElement("input");
-            let calculateDiv = document.createElement("div");
-            calculateButton.setAttribute("type", "button");
-            calculateButton.setAttribute("id", "calculate-button");
-            calculateButton.setAttribute("value", "Calculate\u0020Route(s)");
-            calculateButton.onclick = ()=>{
-                window.location.assign(`/calculate?s=${startCoords.lon},${startCoords.lat}&d=${destCoords.lon},${destCoords.lat}`)
-            }
-            calculateButton.setAttribute
-            calculateDiv.setAttribute("id", "calculate-div");
-            calculateDiv.append(calculateButton);
-            locationsFormDiv.appendChild(calculateDiv);
-        }
+            };
+        });
     </script>
 </body>
 

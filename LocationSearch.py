@@ -7,6 +7,21 @@ from enum import Enum
 import math
 from strip_ansi import strip_ansi
 
+
+with open("config.json", "r") as f:
+    CONFIG = json.load(f)
+__VERSION_ROOT = CONFIG.get("version")
+__DEBUGGING_ROOT = CONFIG.get("debugging")
+
+LEETROUTE_VERSION = __VERSION_ROOT.get("base")
+ENGINE_VERSION = __VERSION_ROOT.get("engine")
+WEBAPP_VERSION = __VERSION_ROOT.get("webapp")
+
+ENGINE_DEBUGGING = __DEBUGGING_ROOT.get("engine")
+LOCSEARCH_DEBUGGING = __DEBUGGING_ROOT.get("LocationSearch")
+WEBAPP_DEBUGGING = __DEBUGGING_ROOT.get("webapp")
+
+
 class DistanceUnit(Enum):
     MILES = "miles"
     KILOMETERS = "kilometers"
@@ -61,10 +76,20 @@ class Location:
 
     def __str__(self) -> str:
         return self.name
+    
+
+def debug(content: str) -> None:
+    """Send a debug message to the console
+
+    Args:
+        content (str): content to include
+    """
+    if LOCSEARCH_DEBUGGING:
+        print(f"\x1b[35m[DEBUG: {__file__}] {content}\x1b[0m")
 
 
 def search_map(query: str, priority_pos: Optional[tuple[float, float]] = None, limit: int = 15) -> dict[str, Any]:
-    """Perform a reverse-geocode search using Komoot Photon
+    """Perform a search using Komoot Photon
 
     Args:
         query (str): Query to search
@@ -87,7 +112,7 @@ def search_map(query: str, priority_pos: Optional[tuple[float, float]] = None, l
         params["lon"] = lon
 
     headers = {
-        "User-Agent": "leetRoute/0.0.01-dev"
+        "User-Agent": f"leetRoute/{LEETROUTE_VERSION}"
     }
 
     response = requests.get(url, params=params, headers=headers)
@@ -96,6 +121,43 @@ def search_map(query: str, priority_pos: Optional[tuple[float, float]] = None, l
     res["query"] = query
     return res
 
+
+def debug(content: str) -> None:
+    """Send a debug message to the console
+
+    Args:
+        content (str): content to include
+    """
+    if ENGINE_DEBUGGING:
+        print(f"\x1b[35m[DEBUG: {__file__}] {content}\x1b[0m")
+
+
+def reverse_geocode(coord: Point, limit: int=1) -> dict[str, Any]:
+    """Perform a reverse-geocode search using Komoot Photon
+
+    Args:
+        coord (Point): Coordinates to search
+        limit (int): Max number of results to return
+
+    Returns:
+        dict[str, Any]
+    """
+
+    url = "https://photon.komoot.io/reverse"
+    params = {
+        "lon": coord.lat,
+        "lat": coord.lon,
+        "limit": limit
+    }
+
+    headers = {
+        "User-Agent": f"leetRoute/{LEETROUTE_VERSION}"
+    }
+
+    response = requests.get(url, params=params, headers=headers)
+    response.raise_for_status()
+    res = response.json()
+    return res
 
 def format_results(results: dict[str, Any], ansi: bool=True) -> tuple[list[dict[str, Any]], list[Location]]:
     """

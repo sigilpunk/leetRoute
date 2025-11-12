@@ -3,58 +3,158 @@
 
 <head>
     <meta charset="utf-8">
+    <title>leetRoute - Calculate</title>
+    <link rel="icon" href="{{ url_for('static', filename='/images/favicon.ico') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-gpx"></script>
+    <script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
     <style>
-        div {
-            margin: .5em;
-            border-radius: 5px;
-        }
-        
-        .files{
-            display: flex;
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            background: #fafafa;
         }
 
-        .entry{
-            border: 2px solid black;
+        #header {
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            padding: 1em 2em;
+            background: #fff;
+            box-shadow: 0 2px 10px #0001;
+            margin-bottom: 1.5em;
+        }
+
+        #header-logo {
+            height: 2em;
+        }
+
+        #header h2 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.2em;
+        }
+
+        #files {
+            display: flex;
+            flex-direction: column;
+            gap: 1em;
+            width: 90%;
+            max-width: 600px;
+            margin: 0 auto 2em auto;
+        }
+
+        .entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 2px solid #000;
             box-shadow: 2px 2px 10px #0002;
-            padding: 0.5em;
+            border-radius: 6px;
+            background: #fff;
+            padding: 0.75em 1em;
+        }
+
+        .entry p {
+            margin: 0;
+            font-weight: 500;
         }
 
         .entry button {
-            align-self: center;
+            border: none;
+            background: #0078d7;
+            color: white;
+            padding: 0.5em 1em;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .entry button:hover {
+            background: #005ea6;
+        }
+
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px #0002;
         }
     </style>
 </head>
 
 <body>
-    <div id="files">
+    <div id="header">
+        <a href="/"><img id="header-logo" src="{{ url_for('static', filename='/images/favicon.ico') }}"></a>
+        <h2>leetRoute v{{ version }}</h2>
     </div>
+    <div id="files"></div>
     <script>
         let results = {{ results }};
         let filesDiv = document.getElementById("files");
-        // let googleMapsUrl = results.google_maps_url;
-        // let kml = results.kml;
-        // let gpx = results.gpx;
-        // let json = results.json;
-        for(key in results){
+
+        for (var key in results) {
+            if(key === "embeds"){
+                continue;
+            }
+            let url = results[key];
+
             let entryDiv = document.createElement("div");
-            let textDiv = document.createElement("div");
-            let buttonDiv = document.createElement("div");
-            let entryButton = document.createElement("button");
-            let entryText = document.createElement("p");
-            
-            entryText.textContent = `${key}:`;
-            entryButton.textContent = (key === "Google Maps") ? "View" : "Download";
-            entryDiv.style.display = "flex";
             entryDiv.classList.add("entry");
 
-            textDiv.appendChild(entryText);
-            buttonDiv.appendChild(entryButton);
+            let entryText = document.createElement("p");
+            entryText.textContent = `${key}:`;
 
-            entryDiv.appendChild(textDiv);
-            entryDiv.appendChild(buttonDiv);
+            let entryButton = document.createElement("button");
+            entryButton.textContent = (key === "Google Maps") ? "View" : "Download";
+            entryButton.onclick = () => { window.open(url, '_blank'); };
+
+            entryDiv.appendChild(entryText);
+            entryDiv.appendChild(entryButton);
             filesDiv.appendChild(entryDiv);
         }
     </script>
+    <div id="map-container" style="width:90%; max-width:900px; margin:2em auto;">
+        <div id="map"></div>
+    </div>
+    <script>
+        // let results = {{ results | tojson }};
+        let kmlUrl = results["KML"];
+        let gpxUrl = results["GPX"];
+        let urls = [gpxUrl, kmlUrl].filter(Boolean);
+
+        if (urls.length > 0) {
+            let map = L.map('map').setView([42.96, -85.65], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            urls.forEach((url) => {
+                let mapSource = url;
+
+                if (mapSource.endsWith(".gpx")) {
+                    new L.GPX(mapSource, {
+                        async: true,
+                        marker_options: {
+                            startIconUrl: null,
+                            endIconUrl: null,
+                            shadowUrl: null
+                        }
+                    }).on('loaded', function(e) {
+                        map.fitBounds(e.target.getBounds());
+                    }).addTo(map);
+                } else if (mapSource.endsWith(".kml")) {
+                    omnivore.kml(mapSource)
+                        .on('ready', function(e) {
+                            map.fitBounds(e.target.getBounds());
+                        })
+                        .addTo(map);
+                }
+            });
+        }
+    </script>
+
 </body>
 
 </html>

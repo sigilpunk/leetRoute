@@ -1,4 +1,5 @@
 # from LocationSearch import prompt_search, Location, Point
+from LocationSearch import reverse_geocode
 import openrouteservice
 from openrouteservice.directions import directions as ors_directions
 from dotenv import load_dotenv
@@ -11,6 +12,21 @@ from pathlib import Path
 from typing import Self, Literal
 import math
 from enum import Enum
+
+
+with open("config.json", "r") as f:
+    CONFIG = json.load(f)
+__VERSION_ROOT = CONFIG.get("version")
+__DEBUGGING_ROOT = CONFIG.get("debugging")
+
+LEETROUTE_VERSION = __VERSION_ROOT.get("base")
+ENGINE_VERSION = __VERSION_ROOT.get("engine")
+WEBAPP_VERSION = __VERSION_ROOT.get("webapp")
+
+ENGINE_DEBUGGING = __DEBUGGING_ROOT.get("engine")
+LOCSEARCH_DEBUGGING = __DEBUGGING_ROOT.get("LocationSearch")
+WEBAPP_DEBUGGING = __DEBUGGING_ROOT.get("webapp")
+
 
 load_dotenv()
 ORS_KEY = getenv("ORS_KEY")
@@ -150,6 +166,17 @@ class Directions:
                 v = routes
             conv_data[k] = v
         return cls(**conv_data)
+    
+
+
+def debug(content: str) -> None:
+    """Send a debug message to the console
+
+    Args:
+        content (str): content to include
+    """
+    if ENGINE_DEBUGGING:
+        print(f"\x1b[35m[DEBUG: {__file__}] {content}\x1b[0m")
 
 
 def get_directions(start: Location, dest: Location, debug: bool=False, units: Literal["m", "km", "mi"]="mi") -> Directions:
@@ -248,12 +275,14 @@ def generate_kml(start: Location, dest: Location, route: Route, output_path: Pat
                 coords=[(wp.lon, wp.lat)]
             )
             p.style = step_style
+
     
-    outfile = output_path.joinpath(Path(f"Route from {start.name} to {dest.name}.kml"))
+    route_name = f"route_from_{start.name}_to_{dest.name}".replace(" ", "_")
+    outfile = output_path.joinpath(Path(route_name+".kml"))
     kml.save(outfile)
 
 
-def generate_maps_url(route: Route, max_waypoints: int=10) -> str:
+def generate_maps_url(route: Route, max_waypoints: int=10, embed: bool=False) -> str:
     """
     Generates a Google Maps directions URL from a Route object
     Google Maps only supports <=10 waypoints in the URL, so the route is sampled at 10 equidistant points.
@@ -311,24 +340,25 @@ def export_route(
     """
     output_dir.mkdir(parents=True, exist_ok=True)
     route_name = f"route_from_{start.name}_to_{dest.name}".replace(" ", "_")
+    debug(f"{route_name=}")
     
+    # results = {'embeds':{}}
     results = {}
     
     # 1. KML Export
     kml_path = output_dir / f"{route_name}.kml"
     generate_kml(start, dest, route, output_dir)
-    results['KML'] = str(kml_path)
+    results['KML'] = f"/exports/{kml_path.name}"
+
+
     
     # 2. GPX Export
     gpx_path = output_dir / f"{route_name}.gpx"
     export_to_gpx(route, gpx_path, f"Route from {start.name} to {dest.name}")
-    results['GPX'] = str(gpx_path)
-    
-    # 3. Google Maps URL
+    results['GPX'] = f"/exports/{gpx_path.name}"
+
+    # 3. Optional: JSON export with metadata
     maps_url = generate_maps_url(route)
-    results['Google Maps'] = maps_url
-    
-    # 4. Optional: JSON export with metadata
     json_path = output_dir / f"{route_name}_data.json"
     route_data = {
         'start': {'name': start.name, 'coords': start.coords.to_tuple()},
@@ -341,6 +371,14 @@ def export_route(
     with open(json_path, 'w') as f:
         json.dump(route_data, f, indent=2)
     results['JSON'] = str(json_path)
+
+    # 4. Google Maps URL
+    results['Google Maps'] = maps_url
+
+    # # 5. Google Maps Embed URL
+    # maps_embed_url = generate_maps_url(route, embed=True)
+    # results['embeds']['maps'] = maps_embed_url
+    
     
     # Open in browser if requested
     if open_browser:
@@ -349,9 +387,50 @@ def export_route(
     
     return results
 
+
+def names_from_result(result: dict) -> list[str]:
+    """Generates display names from an OSM result
+
+    Args:
+        result (dict): an OSM search result
+
+    Returns:
+        list[str]: list of names ordered by index in the "features" list
+    """
+    names = []
+    for feature in result.get("features", []) or []:
+        p = feature.get("properties") or {}
+        if not p:
+            continue
+
+        housenumber = p.get("housenumber")
+        street = p.get("street", p.get("name"))
+        city = p.get("city")
+        state = p.get("state")
+        countrycode = p.get("countrycode")
+        ftype = p.get("osm_value")
+        ftype = ftype.replace("_", " ").capitalize()
+
+        parts = [housenumber, street, city, state, countrycode, ftype]
+
+        name = " ".join(str(part) for part in parts if part)
+        names.append(name)
+    return names
+
+
 def main(start: Point, dest: Point) -> dict[str, str]:
-    start = Location(coords=start,displayname="A",name="A")
-    dest = Location(coords=dest, displayname="B",name="B")
+    start_geocode = reverse_geocode(start)
+    start_geocode["coords"] = dataclasses.asdict(start)
+    dest_geocode = reverse_geocode(dest)
+    dest_geocode["coords"] = dataclasses.asdict(dest)
+    start_name = names_from_result(start_geocode)[0]
+    dest_name = names_from_result(dest_geocode)[0]
+    with open("res.start.json", "w") as f:
+        json.dump(start_geocode, f, indent=4)
+    with open("res.dest.json", "w") as f:
+        json.dump(dest_geocode, f, indent=4)
+    start = Location(coords=start,name=start_name)
+    dest = Location(coords=dest, name=dest_name)
     directions = get_directions(start, dest)
     return export_route(
         directions.routes[0],
