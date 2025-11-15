@@ -1,0 +1,12 @@
+{
+    "version": {
+        "base": "0.0.02-dev",
+        "engine": "0.1.1",
+        "webapp": "0.1.5"
+    },
+    "debugging": {
+        "engine": true,
+        "LocationSearch": true,
+        "webapp": true
+    }
+}

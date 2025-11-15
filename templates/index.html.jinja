@@ -3,13 +3,36 @@
 
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>leetRoute - Home</title>
     <link rel="icon" href="{{ url_for('static', filename='/images/favicon.ico') }}">
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             margin: 0;
             background: #fafafa;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .icon-location {
+            background: url("{{ url_for('static', filename='/images/location.svg') }}");
+            background-repeat: no-repeat;
+            background-size: cover;
+            display: inline-block;
+            height: 1.2em;
+            width: 1.2em;
+        }
+
+        #start-loc-container {
+            display: flex;
+        }
+
+        #start-loc {
+            flex-grow: 1;
         }
 
         #header {
@@ -17,19 +40,21 @@
             align-items: center;
             justify-content: center;
             gap: 0.5em;
-            padding: 1.2em 2em;
+            padding: 1em;
             background: #fff;
             box-shadow: 0 2px 10px #0001;
-            margin-bottom: 2em;
+            margin-bottom: 1.5em;
         }
 
         #header-logo {
-            height: 2em;
+            height: 1.8em;
+            width: 1.8em;
+            object-fit: contain;
         }
 
         #header h1 {
             margin: 0;
-            font-size: 1.4em;
+            font-size: 1.2em;
             font-weight: 600;
         }
 
@@ -38,10 +63,10 @@
             border-radius: 6px;
             background: #fff;
             box-shadow: 2px 2px 10px #0002;
-            padding: 2em;
-            width: 90%;
+            padding: 1.5em;
+            width: calc(100% - 2em);
             max-width: 600px;
-            margin: 0 auto 2em auto;
+            margin: 0 auto 1.5em auto;
         }
 
         form#locations-form {
@@ -52,28 +77,37 @@
 
         form#locations-form label {
             font-weight: bold;
+            font-size: 0.95em;
         }
 
         form#locations-form input[type="text"] {
             border: 1px solid #888;
             border-radius: 4px;
-            padding: 0.5em;
+            padding: 0.6em;
             font-size: 1em;
+            width: 100%;
+            -webkit-appearance: none;
         }
 
         #search-button {
             background: #0078d7;
             color: white;
             border: none;
-            padding: 0.6em 1em;
+            padding: 0.75em 1em;
             border-radius: 4px;
             cursor: pointer;
             transition: background 0.2s;
             margin-top: 0.5em;
+            font-size: 1em;
+            -webkit-tap-highlight-color: transparent;
         }
 
         #search-button:hover {
             background: #005ea6;
+        }
+
+        #search-button:active {
+            background: #004578;
         }
 
         #calculate-div {
@@ -82,23 +116,29 @@
             justify-content: center;
         }
 
-        #calculate-button {
+        #calculate-button, button, input[type='button'] {
             background: #0078d7;
             color: white;
             border: none;
-            padding: 0.6em 1.2em;
+            padding: 0.75em 1.2em;
             border-radius: 4px;
             cursor: pointer;
             transition: background 0.2s;
+            font-size: 1em;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        #calculate-button:disabled {
+        #calculate-button:disabled, button:disabled, input[type='button']:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
 
-        #calculate-button:hover:enabled {
+        #calculate-button:hover:enabled, button:hover:enabled, input[type='button']:hover:enabled {
             background: #005ea6;
+        }
+
+        #calculate-button:active:enabled, button:active:enabled, input[type='button']:active:enabled {
+            background: #004578;
         }
 
         .error-block {
@@ -107,27 +147,32 @@
             background: #fff;
             border-radius: 6px;
             box-shadow: 2px 2px 10px #0002;
-            padding: 2em;
-            width: 90%;
+            padding: 1.5em;
+            width: calc(100% - 2em);
             max-width: 600px;
-            margin: 0 auto 2em auto;
+            margin: 0 auto 1.5em auto;
             text-align: center;
         }
 
+        .error-block h3 {
+            margin-top: 0;
+        }
+
         .search-results {
-            height: 30em;
+            height: 25em;
             overflow-y: auto;
-            padding: 1em;
+            -webkit-overflow-scrolling: touch;
+            padding: 0;
             border: 2px solid black;
             border-radius: 6px;
             background: #fff;
             box-shadow: 2px 2px 10px #0002;
             display: flex;
             flex-direction: column;
-            gap: 0.75em;
-            width: 90%;
+            gap: 0;
+            width: calc(100% - 2em);
             max-width: 600px;
-            margin: 0 auto 2em auto;
+            margin: 0 auto 1.5em auto;
         }
 
         .search-header {
@@ -135,30 +180,102 @@
             top: 0;
             background: #fff;
             border-bottom: 2px solid black;
-            margin-bottom: 0.5em;
-            padding: 0.5em;
+            padding: 0.75em 1em;
+            z-index: 10;
+        }
+
+        .search-header h3 {
+            margin: 0;
+            font-size: 1em;
         }
 
         .search-result {
-            border: 2px solid black;
-            border-radius: 5px;
+            border-bottom: 1px solid #ddd;
             padding: 1em;
-            transition: all ease-in-out 0.1s;
+            transition: background-color 0.15s;
             cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            font-size: 0.95em;
+        }
+
+        .search-result:last-child {
+            border-bottom: none;
         }
 
         .search-result.selected {
             background-color: #9f9;
         }
 
-        .search-result:hover {
-            background-color: #bbb;
-            transform: translateY(-3px);
-        }
-
         .search-result:active {
             background-color: #ddd;
-            transform: translateY(1px);
+        }
+
+        /* Tablet and larger */
+        @media (min-width: 600px) {
+            #header {
+                padding: 1.2em 2em;
+                margin-bottom: 2em;
+            }
+
+            #header-logo {
+                height: 2em;
+                width: 2em;
+            }
+
+            #header h1 {
+                font-size: 1.4em;
+            }
+
+            #locations-form-div {
+                padding: 2em;
+                margin-bottom: 2em;
+            }
+
+            .error-block {
+                padding: 2em;
+                margin-bottom: 2em;
+            }
+
+            .search-results {
+                height: 30em;
+                padding: 0;
+                margin-bottom: 2em;
+            }
+
+            .search-header {
+                padding: 1em;
+            }
+
+            .search-header h3 {
+                font-size: 1.17em;
+            }
+
+            .search-result {
+                padding: 1em;
+                border: none;
+                margin: 0.5em 1em;
+                border-radius: 5px;
+                border: 2px solid black;
+                font-size: 1em;
+            }
+
+            .search-result:hover {
+                background-color: #bbb;
+                transform: translateY(-3px);
+            }
+
+            .search-result:active {
+                background-color: #ddd;
+                transform: translateY(1px);
+            }
+        }
+
+        /* Desktop */
+        @media (min-width: 1024px) {
+            .search-results {
+                height: 35em;
+            }
         }
     </style>
 </head>
@@ -172,7 +289,9 @@
     <div id="locations-form-div">
         <form id="locations-form" action="/" method="get">
             <label for="start-loc">Start Location:</label>
-            <input type="text" id="start-loc" name="s">
+            <div id="start-loc-container">
+                <input type="text" id="start-loc" name="s">
+            </div>
 
             <label for="dest-loc">Destination Location:</label>
             <input type="text" id="dest-loc" name="d">
@@ -258,6 +377,40 @@
                     });
             };
         });
+    </script>
+    <script>
+        function checkLocationAbility(){
+            if("gelocation" in navigator){
+                return true
+            } else {
+                return false
+            }
+        }
+        function getDevicePosition(){
+            let pos;
+            navigator.geolocation.getCurrentPosition((position) => {
+                pos = position;
+            })
+            console.log(pos)
+            return pos
+        }
+        function reverseGeocodeDevicePosition(){
+            let position = getDevicePosition();
+            let coords = position.coords;
+            fetch(`https://photon.komoot.io/reverse?lon=${coords.longitude}&lat=${coords.latitude}`)
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw new Error(`HTTP error! Status code: ${resp.status}; ${resp.statusText}`);
+                    }
+                    return resp.json();
+                })
+                .then(data => {
+                    console.log(data);
+                })
+                .catch(error => {
+                        console.error('Error fetching data:', error);
+                });
+        }
     </script>
 </body>
 

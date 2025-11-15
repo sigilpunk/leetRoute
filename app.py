@@ -4,6 +4,7 @@ from engine import main as get_and_export_directions, Point
 import json
 from pathlib import Path
 from dataclasses import asdict
+from os import remove
 
 with open("config.json", "r") as f:
     CONFIG = json.load(f)
@@ -107,5 +108,16 @@ def calculate_page():
 def download(filename: str):
     filepath = Path(app.root_path).joinpath("exports")
     return send_from_directory(filepath, filename)
+
+@app.route("/exports/<path:filename>", methods=["DELETE"])
+def remove_remote(filename: str):
+    filepath = Path(app.root_path).joinpath("exports").joinpath(filename)
+    # return send_from_directory(filepath, filename)
+    if filepath.exists:
+        remove(filepath)
+        return {"message": f"successfully deleted '{filepath}'"}
+    else:
+        return {"message": f"the file '{filepath}' does not exist"}
+
 
 app.run()

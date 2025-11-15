@@ -179,7 +179,15 @@ def debug(content: str) -> None:
         print(f"\x1b[35m[DEBUG: {__file__}] {content}\x1b[0m")
 
 
-def get_directions(start: Location, dest: Location, debug: bool=False, units: Literal["m", "km", "mi"]="mi") -> Directions:
+def alt_routes(share_factor: float=0.8, target_count: int=2, weight_factor: int=2) -> dict[str,float|int]:
+    return {
+        "share_factor": share_factor,
+        "target_count": target_count,
+        "weight_factor": weight_factor
+    }
+
+
+def get_directions(start: Location, dest: Location, debug: bool=False, units: Literal["m", "km", "mi"]="mi", alternative_routes: dict[str,float|int] | None = None) -> Directions:
     """
     Get directions from Openroute Service
 
@@ -198,15 +206,16 @@ def get_directions(start: Location, dest: Location, debug: bool=False, units: Li
     directions = ors_directions(
         client=ors,
         coordinates=coords,
-        alternative_routes=None,
+        alternative_routes=alternative_routes,
         units=units
         )
     
-    pl_str = directions["routes"][0]["geometry"]
-    pl_coords = polyline.decode(pl_str)
-    directions["routes"][0]["polyline"] = pl_coords
-    # pl_coords = [Point(*c) for c in pl_coords]
-    # directions["routes"][0]["polyline"] = pl_coords
+    for i in range(len(directions["routes"])):
+        pl_str = directions["routes"][i]["geometry"]
+        pl_coords = polyline.decode(pl_str)
+        directions["routes"][i]["polyline"] = pl_coords
+        # pl_coords = [Point(*c) for c in pl_coords]
+        # directions["routes"][i]["polyline"] = pl_coords
 
     if debug:
         with open("directions.json","w") as f:
@@ -234,10 +243,10 @@ def analyse_curvature(route: Route) -> dict:
     }
 
 
-start = Location(coords=Point(-85.4586982792198, 42.71960583782718),displayname="Home",name="Home")
-dest = Location(coords=Point(-85.66661925485876, 42.96804797355541), displayname="GRCC Parking Ramp A",name="GRCC Parking Ramp A")
-directions = get_directions(start, dest)
-curvature = analyse_curvature(directions.routes[0])
+# start = Location(coords=Point(-85.4586982792198, 42.71960583782718),displayname="Home",name="Home")
+# dest = Location(coords=Point(-85.66661925485876, 42.96804797355541), displayname="GRCC Parking Ramp A",name="GRCC Parking Ramp A")
+# directions = get_directions(start, dest)
+# curvature = analyse_curvature(directions.routes[0])
 
 def generate_kml(start: Location, dest: Location, route: Route, output_path: Path) -> None:
     kml = simplekml.Kml()
