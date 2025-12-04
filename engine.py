@@ -12,6 +12,10 @@ from pathlib import Path
 from typing import Self, Literal
 import math
 from enum import Enum
+import vercel_blob as blob
+
+### TODO:
+# - [IMPORTANT!!!] Setup `exports` usage in this script and `app.py` to use vercel blobs
 
 
 with open("config.json", "r") as f:
@@ -30,6 +34,7 @@ WEBAPP_DEBUGGING = __DEBUGGING_ROOT.get("webapp")
 
 load_dotenv()
 ORS_KEY = getenv("ORS_KEY")
+BLOB_READ_WRITE_TOKEN = getenv("BLOB_READ_WRITE_TOKEN")
 ors = openrouteservice.Client(key=ORS_KEY)
 
 class DistanceUnit(Enum):
@@ -248,7 +253,7 @@ def analyse_curvature(route: Route) -> dict:
 # directions = get_directions(start, dest)
 # curvature = analyse_curvature(directions.routes[0])
 
-def generate_kml(start: Location, dest: Location, route: Route, output_path: Path) -> None:
+def generate_kml(start: Location, dest: Location, route: Route, output_path: Path, use_blob: bool=False) -> None:
     kml = simplekml.Kml()
     # linestring_data = [(p.lon, p.lat) for p in directions]
     line = kml.newlinestring(
@@ -288,7 +293,13 @@ def generate_kml(start: Location, dest: Location, route: Route, output_path: Pat
     
     route_name = f"route_from_{start.name}_to_{dest.name}".replace(" ", "_")
     outfile = output_path.joinpath(Path(route_name+".kml"))
-    kml.save(outfile)
+    if use_blob:
+        resp = blob.put(outfile, kml.kml(), verbose=True)
+        kml_path = resp.json().get("url")
+        return kml_path
+    else:
+        with open(outfile, "w", encoding="utf-8") as f:
+            f.write(kml.kml())
 
 
 def generate_maps_url(route: Route, max_waypoints: int=10, embed: bool=False) -> str:
@@ -321,7 +332,7 @@ def generate_maps_url(route: Route, max_waypoints: int=10, embed: bool=False) ->
 
     return url
 
-def export_to_gpx(route: Route, outfile: Path, route_name: str="Route") -> None:
+def export_to_gpx(route: Route, outfile: Path, route_name: str="Route", use_blob: bool=False) -> None:
     gpx = f'''<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1" creator="leetRoute">
     <trk>
@@ -332,8 +343,13 @@ def export_to_gpx(route: Route, outfile: Path, route_name: str="Route") -> None:
         gpx += f'\t\t<trkpt lat="{p.lat}" lon="{p.lon}"></trkpt>\n'
     gpx += "\t\t</trkseg>\n\t</trk>\n</gpx>"
 
-    with open(outfile, "w", encoding="utf-8") as f:
-        f.write(gpx)
+    if use_blob:
+        resp = blob.put(outfile, gpx, verbose=True)
+        return resp.json().get("url")
+    else:
+        with open(outfile, "w", encoding="utf-8") as f:
+            f.write(gpx)
+
 
 
 def export_route(
@@ -341,7 +357,8 @@ def export_route(
     start: Location, 
     dest: Location, 
     output_dir: Path = Path("./"),
-    open_browser: bool = False
+    open_browser: bool = False,
+    use_blob: bool=False
 ) -> dict[str, str]:
     """
     Export route in multiple formats.
@@ -356,15 +373,21 @@ def export_route(
     
     # 1. KML Export
     kml_path = output_dir / f"{route_name}.kml"
-    generate_kml(start, dest, route, output_dir)
-    results['KML'] = f"/exports/{kml_path.name}"
+    kml_blob_path = generate_kml(start, dest, route, output_dir, use_blob)
+    if use_blob and kml_blob_path:
+        results['KML'] = kml_blob_path
+    else:
+        results['KML'] = f"/exports/{kml_path.name}"
 
 
     
     # 2. GPX Export
     gpx_path = output_dir / f"{route_name}.gpx"
-    export_to_gpx(route, gpx_path, f"Route from {start.name} to {dest.name}")
-    results['GPX'] = f"/exports/{gpx_path.name}"
+    gpx_blob_path = export_to_gpx(route, gpx_path, f"Route from {start.name} to {dest.name}", use_blob)
+    if use_blob and gpx_blob_path:
+        results['GPX'] = gpx_blob_path
+    else:
+        results['GPX'] = f"/exports/{kml_path.name}"
 
     # 3. Optional: JSON export with metadata
     maps_url = generate_maps_url(route)
@@ -377,8 +400,13 @@ def export_route(
         'polyline': route.polyline,
         'google_maps_url': maps_url
     }
-    with open(json_path, 'w', encoding="utf-8") as f:
-        json.dump(route_data, f, indent=2)
+    if use_blob:
+        resp = blob.put(json_path, json.dumps(route_data), verbose=True)
+        json_path = resp.json().get("url")
+    else:
+        with open(json_path, 'w', encoding="utf-8") as f:
+            json.dump(route_data, f, indent=2)
+
     results['JSON'] = str(json_path)
 
     # 4. Google Maps URL
