@@ -364,7 +364,8 @@ def export_route(
     Export route in multiple formats.
     Returns dict with paths/URLs to exported files.
     """
-    output_dir.mkdir(parents=True, exist_ok=True)
+    if not use_blob:
+        output_dir.mkdir(parents=True, exist_ok=True)
     route_name = f"route_from_{start.name}_to_{dest.name}".replace(" ", "_")
     debug(f"{route_name=}")
     
