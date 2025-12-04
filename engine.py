@@ -434,10 +434,10 @@ def main(start: Point, dest: Point) -> dict[str, str]:
     dest_geocode["coords"] = dataclasses.asdict(dest)
     start_name = names_from_result(start_geocode)[0]
     dest_name = names_from_result(dest_geocode)[0]
-    with open("res.start.json", "w", encoding="utf-8") as f:
-        json.dump(start_geocode, f, indent=4)
-    with open("res.dest.json", "w", encoding="utf-8") as f:
-        json.dump(dest_geocode, f, indent=4)
+    # with open("res.start.json", "w", encoding="utf-8") as f:
+    #     json.dump(start_geocode, f, indent=4)
+    # with open("res.dest.json", "w", encoding="utf-8") as f:
+    #     json.dump(dest_geocode, f, indent=4)
     start = Location(coords=start,name=start_name)
     dest = Location(coords=dest, name=dest_name)
     directions = get_directions(start, dest)
