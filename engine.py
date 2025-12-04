@@ -456,7 +456,7 @@ def names_from_result(result: dict) -> list[str]:
     return names
 
 
-def main(start: Point, dest: Point) -> dict[str, str]:
+def main(start: Point, dest: Point, use_blob: bool=True) -> dict[str, str]:
     start_geocode = reverse_geocode(start)
     start_geocode["coords"] = dataclasses.asdict(start)
     dest_geocode = reverse_geocode(dest)
@@ -475,7 +475,8 @@ def main(start: Point, dest: Point) -> dict[str, str]:
         start=start,
         dest=dest,
         output_dir=Path("./exports"),
-        open_browser=False
+        open_browser=False,
+        use_blob=use_blob
     )
 # generate_kml(directions.routes[0], Path("./"))
 # curvature = analyse_curvature(directions.routes[0])
