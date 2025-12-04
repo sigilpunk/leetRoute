@@ -1,0 +1,19 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "*.py",
+            "use": "@vercel/python"
+        }
+    ],
+    "routes": [
+        {
+            "src": "(.*)",
+            "dest": "app.py",
+            "methods": ["GET"],
+            "headers": {
+                "Access-Control-Allow-Origin": "https://leetroute.vercel.app"
+            }
+        }
+    ]
+}  
