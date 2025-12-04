@@ -245,6 +245,19 @@
             text-align: center;
         }
 
+        .warn-block {
+            border: 3px solid rgb(219, 143, 2);
+            color: rgb(48, 32, 15);
+            background: rgb(241, 230, 210);
+            border-radius: 6px;
+            box-shadow: 2px 2px 10px #0002;
+            padding: 1.5em;
+            width: calc(100% - 2em);
+            max-width: 600px;
+            text-align: center;
+            margin: auto;
+        }
+
         .error-block h3 {
             margin-top: 0;
         }
@@ -435,6 +448,12 @@
             <p>Please provide both locations</p>
         </div>
     {% endif %}
+        <div class="warn-block">
+            <h3>Hey!</h3>
+            <p>This application is in <strong>SUPER-MEGA-ALPHA&#8482;</strong></p>
+            <p>Lots of things WILL be broken or just bad.</p>
+            <p>feel free to yell at me at <a href="https://github.com/sigilpunk/leetRoute">https://github.com/sigilpunk/leetRoute/</a></p>
+        </div>
 
     <script>
         let startCoords = null;
