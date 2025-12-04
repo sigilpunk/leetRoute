@@ -186,7 +186,16 @@
 
             let entryButton = document.createElement("button");
             entryButton.textContent = (key === "Google Maps") ? "View" : "Download";
-            entryButton.onclick = () => { window.open(url, '_blank'); };
+            // entryButton.onclick = () => { window.open(url, '_blank'); };
+            entryButton.onclick = () => {
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = ""; // browser uses filename from server headers
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            };
+
 
             entryDiv.appendChild(entryText);
             entryDiv.appendChild(entryButton);

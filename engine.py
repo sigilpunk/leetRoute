@@ -218,7 +218,7 @@ def get_directions(start: Location, dest: Location, debug: bool=False, units: Li
         # directions["routes"][i]["polyline"] = pl_coords
 
     if debug:
-        with open("directions.json","w") as f:
+        with open("directions.json","w", encoding="utf-8") as f:
             json.dump(directions, f, indent=4)
     
     return Directions.from_dict(directions)
@@ -332,7 +332,7 @@ def export_to_gpx(route: Route, outfile: Path, route_name: str="Route") -> None:
         gpx += f'\t\t<trkpt lat="{p.lat}" lon="{p.lon}"></trkpt>\n'
     gpx += "\t\t</trkseg>\n\t</trk>\n</gpx>"
 
-    with open(outfile, "w") as f:
+    with open(outfile, "w", encoding="utf-8") as f:
         f.write(gpx)
 
 
@@ -377,7 +377,7 @@ def export_route(
         'polyline': route.polyline,
         'google_maps_url': maps_url
     }
-    with open(json_path, 'w') as f:
+    with open(json_path, 'w', encoding="utf-8") as f:
         json.dump(route_data, f, indent=2)
     results['JSON'] = str(json_path)
 
@@ -434,9 +434,9 @@ def main(start: Point, dest: Point) -> dict[str, str]:
     dest_geocode["coords"] = dataclasses.asdict(dest)
     start_name = names_from_result(start_geocode)[0]
     dest_name = names_from_result(dest_geocode)[0]
-    with open("res.start.json", "w") as f:
+    with open("res.start.json", "w", encoding="utf-8") as f:
         json.dump(start_geocode, f, indent=4)
-    with open("res.dest.json", "w") as f:
+    with open("res.dest.json", "w", encoding="utf-8") as f:
         json.dump(dest_geocode, f, indent=4)
     start = Location(coords=start,name=start_name)
     dest = Location(coords=dest, name=dest_name)

@@ -27,12 +27,58 @@
             width: 1.2em;
         }
 
-        #start-loc-container {
+        #start-loc-container, #dest-loc-container {
+            position: relative;
             display: flex;
+            align-items: center;
         }
 
-        #start-loc {
+        #start-loc, #dest-loc {
             flex-grow: 1;
+        }
+
+        #start-loc.selected, #dest-loc.selected {
+            background-color: #9f9;
+            border-color: #4a4;
+        }
+
+        #start-loc:disabled, #dest-loc:disabled {
+            opacity: 1;
+            cursor: not-allowed;
+        }
+
+        .clear-button {
+            position: absolute;
+            right: 0.5em;
+            background: transparent;
+            color: #888;
+            border: none;
+            border-radius: 50%;
+            width: 1.8em;
+            height: 1.8em;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            transition: color 0.2s;
+            z-index: 10;
+            flex-shrink: 0;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .clear-button:hover {
+            color: #333;
+        }
+
+        .clear-button:active {
+            color: #000;
+        }
+
+        .clear-button.show {
+            display: flex;
         }
 
         #header {
@@ -89,6 +135,51 @@
             -webkit-appearance: none;
         }
 
+        /* Predictive search dropdown */
+        .predictions-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #000;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .predictions-dropdown.show {
+            display: block;
+        }
+
+        .prediction-item {
+            padding: 0.75em;
+            cursor: pointer;
+            border-bottom: 1px solid #ddd;
+            transition: background 0.15s;
+            font-size: 0.9em;
+        }
+
+        .prediction-item:last-child {
+            border-bottom: none;
+        }
+
+        .prediction-item:hover {
+            background: #e8f4ff;
+        }
+
+        .prediction-item:active {
+            background: #d0e8ff;
+        }
+
+        .prediction-item.selected {
+            background: #9f9;
+        }
+
         #search-button {
             background: #0078d7;
             color: white;
@@ -133,11 +224,11 @@
             cursor: not-allowed;
         }
 
-        #calculate-button:hover:enabled, button:hover:enabled, input[type='button']:hover:enabled {
+        #calculate-button:hover:enabled, button:not(.clear-button):hover:enabled, input[type='button']:hover:enabled {
             background: #005ea6;
         }
 
-        #calculate-button:active:enabled, button:active:enabled, input[type='button']:active:enabled {
+        #calculate-button:active:enabled, button:not(.clear-button):active:enabled, input[type='button']:active:enabled {
             background: #004578;
         }
 
@@ -269,6 +360,11 @@
                 background-color: #ddd;
                 transform: translateY(1px);
             }
+
+            .prediction-item {
+                padding: 0.85em;
+                font-size: 0.95em;
+            }
         }
 
         /* Desktop */
@@ -290,13 +386,19 @@
         <form id="locations-form" action="/" method="get">
             <label for="start-loc">Start Location:</label>
             <div id="start-loc-container">
-                <input type="text" id="start-loc" name="s">
+                <input type="text" id="start-loc" name="s" autocomplete="off">
+                <button type="button" class="clear-button" id="start-clear" title="Clear selection">×</button>
+                <div id="start-predictions" class="predictions-dropdown"></div>
             </div>
 
             <label for="dest-loc">Destination Location:</label>
-            <input type="text" id="dest-loc" name="d">
+            <div id="dest-loc-container">
+                <input type="text" id="dest-loc" name="d" autocomplete="off">
+                <button type="button" class="clear-button" id="dest-clear" title="Clear selection">×</button>
+                <div id="dest-predictions" class="predictions-dropdown"></div>
+            </div>
 
-            <input type="submit" id="search-button" value="Search Locations">
+            <!--<input type="submit" id="search-button" value="Search Locations">-->
         </form>
 
         <div id="calculate-div">
@@ -377,6 +479,117 @@
                     });
             };
         });
+
+        // Predictive search functionality
+        let searchTimeout = null;
+        const DEBOUNCE_DELAY = 300;
+
+        function setupPredictiveSearch(inputId, dropdownId, clearButtonId, locationType) {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById(dropdownId);
+            const clearButton = document.getElementById(clearButtonId);
+
+            // Clear button functionality
+            clearButton.onclick = () => {
+                input.value = '';
+                input.disabled = false;
+                input.classList.remove('selected');
+                clearButton.classList.remove('show');
+                
+                if (locationType === 'start') {
+                    startCoords = null;
+                } else {
+                    destCoords = null;
+                }
+                
+                // Disable calculate button if both aren't selected
+                calculateButton.disabled = !(startCoords && destCoords);
+                input.focus();
+            };
+
+            input.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                
+                clearTimeout(searchTimeout);
+                
+                if (query.length < 2) {
+                    dropdown.classList.remove('show');
+                    dropdown.innerHTML = '';
+                    return;
+                }
+
+                searchTimeout = setTimeout(() => {
+                    fetch(`/predictiveSearch?q=${encodeURIComponent(query)}`)
+                        .then(resp => resp.json())
+                        .then(predictions => {
+                            dropdown.innerHTML = '';
+                            
+                            if (predictions.length === 0) {
+                                dropdown.classList.remove('show');
+                                return;
+                            }
+
+                            predictions.forEach((pred) => {
+                                const item = document.createElement('div');
+                                item.className = 'prediction-item';
+                                item.textContent = pred.name;
+                                item.dataset.coords = JSON.stringify(pred.coords);
+                                item.dataset.name = pred.name;
+                                
+                                item.onclick = () => {
+                                    // Fill input with display name
+                                    input.value = pred.name;
+                                    
+                                    // Store coordinates
+                                    if (locationType === 'start') {
+                                        startCoords = pred.coords;
+                                    } else {
+                                        destCoords = pred.coords;
+                                    }
+                                    
+                                    // Lock the field and style it
+                                    input.disabled = true;
+                                    input.classList.add('selected');
+                                    clearButton.classList.add('show');
+                                    
+                                    dropdown.classList.remove('show');
+                                    dropdown.innerHTML = '';
+                                    
+                                    // Enable calculate button if both locations selected
+                                    if (startCoords && destCoords) {
+                                        calculateButton.disabled = false;
+                                    }
+                                };
+                                
+                                dropdown.appendChild(item);
+                            });
+                            
+                            dropdown.classList.add('show');
+                        })
+                        .catch(error => {
+                            console.error('Predictive search error:', error);
+                        });
+                }, DEBOUNCE_DELAY);
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.remove('show');
+                }
+            });
+
+            // Close dropdown on Escape key
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    dropdown.classList.remove('show');
+                }
+            });
+        }
+
+        // Initialize predictive search for both fields
+        setupPredictiveSearch('start-loc', 'start-predictions', 'start-clear', 'start');
+        setupPredictiveSearch('dest-loc', 'dest-predictions', 'dest-clear', 'dest');
     </script>
     <script>
         function checkLocationAbility(){

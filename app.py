@@ -53,6 +53,54 @@ def index():
     
     return render_template('index.html.jinja', start_res=ex_sr, dest_res=ex_dr, version=WEBAPP_VERSION)
 
+@app.route("/predictiveSearch", methods=["GET"])
+def predictive_search():
+    """Endpoint for predictive search as user types"""
+    query = request.args.get("q", "")
+    
+    if not query or len(query) < 2:
+        return jsonify([])
+    
+    try:
+        results = search_map(query, limit=10)
+        formatted_data, locations = format_results(results, ansi=False)
+        
+        # formatted_data is a list containing one dict with 'choices' key
+        if isinstance(formatted_data, list) and len(formatted_data) > 0:
+            result_dict = formatted_data[0]
+            choices = result_dict.get('choices', [])
+        elif isinstance(formatted_data, dict):
+            choices = formatted_data.get('choices', [])
+        else:
+            debug(f"Unexpected formatted_data type: {type(formatted_data)}")
+            return jsonify([])
+        
+        # Return list of predictions with name and coordinates
+        predictions = []
+        for choice in choices:
+            # choice is a tuple like (text, index)
+            if isinstance(choice, tuple) and len(choice) >= 2:
+                text = choice[0]
+                idx = choice[1]
+                
+                if idx < len(locations):
+                    loc = locations[idx]
+                    predictions.append({
+                        "name": text,
+                        "index": idx,
+                        "coords": {
+                            "lat": loc.coords.lat,
+                            "lon": loc.coords.lon
+                        }
+                    })
+        
+        return jsonify(predictions)
+    except Exception as e:
+        debug(f"Predictive search error: {e}")
+        import traceback
+        debug(traceback.format_exc())
+        return jsonify([])
+
 @app.route("/getLocationByIndex", methods=["GET"])
 def get_location_by_index():
     args = request.args
@@ -74,7 +122,6 @@ def get_location_by_index():
     _, locations = format_results(results)
     chosen_location = locations[int(index)]
 
-    # coordinates = ', '.join(str(n) for n in chosen_location.coords.to_tuple())
     coords = chosen_location.coords
     with open("res.getloc.json", "w") as f:
         json.dump(asdict(chosen_location), f, indent=4)
@@ -87,7 +134,6 @@ def get_location_by_index():
         }
     }
     return coords
-    # return asdict(chosen_location)
 
 @app.route("/calculate", methods=["GET"])
 def calculate_page():
@@ -107,12 +153,21 @@ def calculate_page():
 @app.route("/exports/<path:filename>", methods=["GET"])
 def download(filename: str):
     filepath = Path(app.root_path).joinpath("exports")
-    return send_from_directory(filepath, filename)
+    ext = Path(filename).suffix
+    match ext:
+        case ".json":
+            mimetype = "application/json"
+        case ".kml":
+            mimetype = "application/kml"
+        case ".gpx":
+            mimetype = "application/gpx"
+        case _:
+            mimetype = "text/plain"
+    return send_from_directory(filepath, filename, as_attachment=True, mimetype=mimetype)
 
 @app.route("/exports/<path:filename>", methods=["DELETE"])
 def remove_remote(filename: str):
     filepath = Path(app.root_path).joinpath("exports").joinpath(filename)
-    # return send_from_directory(filepath, filename)
     if filepath.exists:
         remove(filepath)
         return {"message": f"successfully deleted '{filepath}'"}
