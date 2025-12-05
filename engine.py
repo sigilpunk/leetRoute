@@ -294,8 +294,8 @@ def generate_kml(start: Location, dest: Location, route: Route, output_path: Pat
     route_name = f"route_from_{start.name}_to_{dest.name}".replace(" ", "_")
     outfile = output_path.joinpath(Path(route_name+".kml"))
     if use_blob:
-        resp = blob.put(str(outfile), bytes(kml.kml(), encoding="utf-8"), verbose=True)
-        kml_path = resp.get("url")
+        resp = blob.put(str(outfile), bytes(kml.kml(), encoding="utf-8"), verbose=True, options={"allowOverwrite": "true"})
+        kml_path = resp.get("downloadUrl")
         return kml_path
     else:
         with open(outfile, "w", encoding="utf-8") as f:
@@ -344,8 +344,8 @@ def export_to_gpx(route: Route, outfile: Path, route_name: str="Route", use_blob
     gpx += "\t\t</trkseg>\n\t</trk>\n</gpx>"
 
     if use_blob:
-        resp = blob.put(str(outfile), bytes(gpx, encoding="utf-8"), verbose=True)
-        return resp.get("url")
+        resp = blob.put(str(outfile), bytes(gpx, encoding="utf-8"), verbose=True, options={"allowOverwrite": "true"})
+        return resp.get("downloadUrl")
     else:
         with open(outfile, "w", encoding="utf-8") as f:
             f.write(gpx)
@@ -402,8 +402,8 @@ def export_route(
         'google_maps_url': maps_url
     }
     if use_blob:
-        resp = blob.put(str(json_path), bytes(json.dumps(route_data), encoding="utf-8"), verbose=True)
-        json_path = resp.get("url")
+        resp = blob.put(str(json_path), bytes(json.dumps(route_data), encoding="utf-8"), verbose=True, options={"allowOverwrite": "true"})
+        json_path = resp.get("downloadUrl")
     else:
         with open(json_path, 'w', encoding="utf-8") as f:
             json.dump(route_data, f, indent=2)
