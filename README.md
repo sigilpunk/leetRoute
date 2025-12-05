@@ -8,7 +8,7 @@
 
 ## what's a leetRoute?
 
-leetRoute picks your route based on criteria **you** set, optimizing for the driving experience rather than just the fastest path. Configure your ideal drive with:
+leetRoute picks your route based on criteria ***you*** set, optimizing for the driving experience rather than just the fastest path. Configure your ideal drive with:
 
 - **Number of turns** - more turns, more fun
 - **Maximum turn radius** - find those tight corners (or not!)
