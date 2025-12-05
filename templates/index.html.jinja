@@ -315,6 +315,36 @@
             background-color: #ddd;
         }
 
+        #calculate-button::after {
+            content: '' !important;
+            display: block !important;
+            width: 1.1em !important;
+            height: 1.1em !important;
+            position: absolute !important;
+            border: 0.2em solid transparent !important;
+            border-right-color: white !important;
+            border-radius: 50% !important;
+            animation: loader-animation 0.7s linear infinite !important;
+            opacity: 0;
+        }
+
+        @keyframes loader-animation {
+            from {
+                transform: rotate(0);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #calculate-button.loading {
+            color: transparent;
+        }
+
+        #calculate-button.loading::after {
+            opacity: 1;
+        }
+
         /* Tablet and larger */
         @media (min-width: 600px) {
             #header {
@@ -415,7 +445,7 @@
         </form>
 
         <div id="calculate-div">
-            <input type="button" id="calculate-button" value="Calculate Route(s)" disabled>
+            <button id="calculate-button" disabled>Calculate Route(s)</button>
         </div>
     </div>
 
@@ -643,6 +673,25 @@
                         console.error('Error fetching data:', error);
                 });
         }
+    </script>
+    <script>
+    function elementPosition(element) {
+        let rect = element.getBoundingClientRect();
+        return rect
+    }
+    const animBtn = document.getElementById("calculate-button");
+    animBtn.addEventListener('click', () => {
+        var btnPos = elementPosition(animBtn);
+        var btnStyleEle = document.createElement("style");
+        btnStyleEle.innerText = `
+        #calculate-button.loading::after{
+            left: calc(${animBtn.offsetLeft}px + calc(${animBtn.offsetWidth}px / 2.25));
+            top: calc(${animBtn.offsetTop}px + calc(${animBtn.offsetHeight}px / 4));
+        }
+        `
+        animBtn.parentNode.appendChild(btnStyleEle);
+        animBtn.classList.add("loading");
+    });
     </script>
 </body>
 

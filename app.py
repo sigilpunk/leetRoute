@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from dataclasses import asdict
 from os import remove
+from sys import argv
 
 with open("config.json", "r") as f:
     CONFIG = json.load(f)
@@ -174,5 +175,10 @@ def remove_remote(filename: str):
     else:
         return {"message": f"the file '{filepath}' does not exist"}
 
-
-# app.run()
+try:
+    state = argv[1]
+except IndexError:
+    state = "remote"
+    pass
+if state == "local":
+    app.run()
