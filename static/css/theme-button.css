@@ -1,0 +1,54 @@
+#theme-button-container {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    width: 3em;
+    height: 3em;
+}
+
+#theme-button {
+    position: relative;
+    border: none;
+    border-radius: 50%;
+    width: 2.5em;
+    height: 2.5em;
+    padding: 0.5em;
+    background: #606069;
+    opacity: 0.4;
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+}
+
+#theme-button:hover {
+    opacity: 0.7;
+}
+
+#theme-button svg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60%;
+    height: 60%;
+    transition: opacity 0.4s ease;
+    color: white;
+}
+
+/* Show moon when in light mode */
+#theme-button[state="light"] .moon-icon {
+    opacity: 1;
+}
+
+#theme-button[state="light"] .sun-icon {
+    opacity: 0;
+}
+
+/* Show sun when in dark mode */
+#theme-button[state="dark"] .moon-icon {
+    opacity: 0;
+}
+
+#theme-button[state="dark"] .sun-icon {
+    opacity: 1;
+}
