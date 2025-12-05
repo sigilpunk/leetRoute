@@ -18,6 +18,21 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        .version-block {
+            font-size: 11px;
+            font-style: italic;
+            font-family: monospace;
+            line-height: 0.5em;
+            position: absolute;
+            bottom: 0;
+            margin: 1.2em;
+        }
+
+        .version-block-container {
+            display: flex;
+            justify-content: center;
+        }
+
         .icon-location {
             background: url("{{ url_for('static', filename='/images/location.svg') }}");
             background-repeat: no-repeat;
@@ -422,7 +437,7 @@
 <body>
     <div id="header">
         <a href="/"><img id="header-logo" src="{{ url_for('static', filename='/images/favicon.ico') }}"></a>
-        <h1>leetRoute v{{ version }}</h1>
+        <h1>leetRoute v{{ webapp_version }}</h1>
     </div>
 
     <div id="locations-form-div">
@@ -483,6 +498,13 @@
             <p>This application is in <strong>SUPER-MEGA-ALPHA&#8482;</strong></p>
             <p>Lots of things WILL be broken or just bad.</p>
             <p>feel free to yell at me at <a href="https://github.com/sigilpunk/leetRoute">https://github.com/sigilpunk/leetRoute/</a></p>
+        </div>
+        <div class="version-block-container">
+            <div class="version-block">
+                <p>Version: {{ base_version }}</p>
+                <p>Engine Version: {{ engine_version }}</p>
+                <p>Webapp Version: {{ webapp_version }}</p>
+            </div>
         </div>
 
     <script>

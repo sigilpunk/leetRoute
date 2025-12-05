@@ -21,6 +21,21 @@
             background: #fafafa;
         }
 
+        .version-block {
+            font-size: 11px;
+            font-style: italic;
+            font-family: monospace;
+            line-height: 0.5em;
+            position: absolute;
+            bottom: 0;
+            margin: 1.2em;
+        }
+
+        .version-block-container {
+            display: flex;
+            justify-content: center;
+        }
+
         #header {
             display: flex;
             align-items: center;
@@ -165,7 +180,7 @@
 <body>
     <div id="header">
         <a href="/"><img id="header-logo" src="{{ url_for('static', filename='/images/favicon.ico') }}"></a>
-        <h2>leetRoute v{{ version }}</h2>
+        <h2>leetRoute v{{ webapp_version }}</h2>
     </div>
     <div id="files"></div>
     <script>
@@ -205,6 +220,13 @@
     <div id="map-container">
         <div id="map"></div>
     </div>
+    <div class="version-block-container">
+            <div class="version-block">
+                <p>Version: {{ base_version }}</p>
+                <p>Engine Version: {{ engine_version }}</p>
+                <p>Webapp Version: {{ webapp_version }}</p>
+            </div>
+        </div>
     <script>
         let kmlUrl = results["KML"];
         let gpxUrl = results["GPX"];

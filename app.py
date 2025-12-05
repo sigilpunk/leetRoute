@@ -52,7 +52,14 @@ def index():
     else:
         ex_sr, ex_dr = None, None
     
-    return render_template('index.html.jinja', start_res=ex_sr, dest_res=ex_dr, version=WEBAPP_VERSION)
+    return render_template(
+        'index.html.jinja', 
+        start_res=ex_sr, 
+        dest_res=ex_dr, 
+        webapp_version=WEBAPP_VERSION, 
+        engine_version=ENGINE_VERSION, 
+        base_version=LEETROUTE_VERSION
+        )
 
 @app.route("/predictiveSearch", methods=["GET"])
 def predictive_search():
@@ -148,8 +155,14 @@ def calculate_page():
         results = get_and_export_directions(start=sp, dest=dp)
     else:
         results = {}
-    
-    return render_template('calculate.html.jinja', results=json.dumps(results), version=WEBAPP_VERSION)
+
+    return render_template(
+        'calculate.html.jinja', 
+        results=json.dumps(results), 
+        webapp_version=WEBAPP_VERSION, 
+        engine_version=ENGINE_VERSION, 
+        base_version=LEETROUTE_VERSION
+    )
 
 @app.route("/exports/<path:filename>", methods=["GET"])
 def download(filename: str):
