@@ -14,9 +14,6 @@ import math
 from enum import Enum
 import vercel_blob as blob
 
-### TODO:
-# - [IMPORTANT!!!] Setup `exports` usage in this script and `app.py` to use vercel blobs
-
 
 with open("config.json", "r") as f:
     CONFIG = json.load(f)

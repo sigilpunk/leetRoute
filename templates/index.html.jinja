@@ -6,432 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>leetRoute - Home</title>
     <link rel="icon" href="{{ url_for('static', filename='/images/favicon.ico') }}">
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            margin: 0;
-            background: #fafafa;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        .version-block {
-            font-size: 11px;
-            font-style: italic;
-            font-family: monospace;
-            line-height: 0.5em;
-            position: absolute;
-            bottom: 0;
-            margin: 1.2em;
-        }
-
-        .version-block-container {
-            display: flex;
-            justify-content: center;
-        }
-
-        .icon-location {
-            background: url("{{ url_for('static', filename='/images/location.svg') }}");
-            background-repeat: no-repeat;
-            background-size: cover;
-            display: inline-block;
-            height: 1.2em;
-            width: 1.2em;
-        }
-
-        #start-loc-container, #dest-loc-container {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        #start-loc, #dest-loc {
-            flex-grow: 1;
-        }
-
-        #start-loc.selected, #dest-loc.selected {
-            background-color: #9f9;
-            border-color: #4a4;
-        }
-
-        #start-loc:disabled, #dest-loc:disabled {
-            opacity: 1;
-            cursor: not-allowed;
-        }
-
-        .clear-button {
-            position: absolute;
-            right: 0.5em;
-            background: transparent;
-            color: #888;
-            border: none;
-            border-radius: 50%;
-            width: 1.8em;
-            height: 1.8em;
-            cursor: pointer;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2em;
-            font-weight: bold;
-            transition: color 0.2s;
-            z-index: 10;
-            flex-shrink: 0;
-            padding: 0;
-            line-height: 1;
-        }
-
-        .clear-button:hover {
-            color: #333;
-        }
-
-        .clear-button:active {
-            color: #000;
-        }
-
-        .clear-button.show {
-            display: flex;
-        }
-
-        #header {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5em;
-            padding: 1em;
-            background: #fff;
-            box-shadow: 0 2px 10px #0001;
-            margin-bottom: 1.5em;
-        }
-
-        #header-logo {
-            height: 1.8em;
-            width: 1.8em;
-            object-fit: contain;
-        }
-
-        #header h1 {
-            margin: 0;
-            font-size: 1.2em;
-            font-weight: 600;
-        }
-
-        #locations-form-div {
-            border: 2px solid black;
-            border-radius: 6px;
-            background: #fff;
-            box-shadow: 2px 2px 10px #0002;
-            padding: 1.5em;
-            width: calc(100% - 2em);
-            max-width: 600px;
-            margin: 0 auto 1.5em auto;
-        }
-
-        form#locations-form {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75em;
-        }
-
-        form#locations-form label {
-            font-weight: bold;
-            font-size: 0.95em;
-        }
-
-        form#locations-form input[type="text"] {
-            border: 1px solid #888;
-            border-radius: 4px;
-            padding: 0.6em;
-            font-size: 1em;
-            width: 100%;
-            -webkit-appearance: none;
-        }
-
-        /* Predictive search dropdown */
-        .predictions-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 2px solid #000;
-            border-top: none;
-            border-radius: 0 0 4px 4px;
-            max-height: 300px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .predictions-dropdown.show {
-            display: block;
-        }
-
-        .prediction-item {
-            padding: 0.75em;
-            cursor: pointer;
-            border-bottom: 1px solid #ddd;
-            transition: background 0.15s;
-            font-size: 0.9em;
-        }
-
-        .prediction-item:last-child {
-            border-bottom: none;
-        }
-
-        .prediction-item:hover {
-            background: #e8f4ff;
-        }
-
-        .prediction-item:active {
-            background: #d0e8ff;
-        }
-
-        .prediction-item.selected {
-            background: #9f9;
-        }
-
-        #search-button {
-            background: #0078d7;
-            color: white;
-            border: none;
-            padding: 0.75em 1em;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-top: 0.5em;
-            font-size: 1em;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        #search-button:hover {
-            background: #005ea6;
-        }
-
-        #search-button:active {
-            background: #004578;
-        }
-
-        #calculate-div {
-            margin-top: 1em;
-            display: flex;
-            justify-content: center;
-        }
-
-        #calculate-button, button, input[type='button'] {
-            background: #0078d7;
-            color: white;
-            border: none;
-            padding: 0.75em 1.2em;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-size: 1em;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        #calculate-button:disabled, button:disabled, input[type='button']:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        #calculate-button:hover:enabled, button:not(.clear-button):hover:enabled, input[type='button']:hover:enabled {
-            background: #005ea6;
-        }
-
-        #calculate-button:active:enabled, button:not(.clear-button):active:enabled, input[type='button']:active:enabled {
-            background: #004578;
-        }
-
-        .error-block {
-            border: 3px solid red;
-            color: #622;
-            background: #fff;
-            border-radius: 6px;
-            box-shadow: 2px 2px 10px #0002;
-            padding: 1.5em;
-            width: calc(100% - 2em);
-            max-width: 600px;
-            margin: 0 auto 1.5em auto;
-            text-align: center;
-        }
-
-        .warn-block {
-            border: 3px solid rgb(219, 143, 2);
-            color: rgb(48, 32, 15);
-            background: rgb(241, 230, 210);
-            border-radius: 6px;
-            box-shadow: 2px 2px 10px #0002;
-            padding: 1.5em;
-            width: calc(100% - 2em);
-            max-width: 600px;
-            text-align: center;
-            margin: auto;
-        }
-
-        .error-block h3 {
-            margin-top: 0;
-        }
-
-        .search-results {
-            height: 25em;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            padding: 0;
-            border: 2px solid black;
-            border-radius: 6px;
-            background: #fff;
-            box-shadow: 2px 2px 10px #0002;
-            display: flex;
-            flex-direction: column;
-            gap: 0;
-            width: calc(100% - 2em);
-            max-width: 600px;
-            margin: 0 auto 1.5em auto;
-        }
-
-        .search-header {
-            position: sticky;
-            top: 0;
-            background: #fff;
-            border-bottom: 2px solid black;
-            padding: 0.75em 1em;
-            z-index: 10;
-        }
-
-        .search-header h3 {
-            margin: 0;
-            font-size: 1em;
-        }
-
-        .search-result {
-            border-bottom: 1px solid #ddd;
-            padding: 1em;
-            transition: background-color 0.15s;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-            font-size: 0.95em;
-        }
-
-        .search-result:last-child {
-            border-bottom: none;
-        }
-
-        .search-result.selected {
-            background-color: #9f9;
-        }
-
-        .search-result:active {
-            background-color: #ddd;
-        }
-
-        #calculate-button::after {
-            content: '' !important;
-            display: block !important;
-            width: 1.1em !important;
-            height: 1.1em !important;
-            position: absolute !important;
-            border: 0.2em solid transparent !important;
-            border-right-color: white !important;
-            border-radius: 50% !important;
-            animation: loader-animation 0.7s linear infinite !important;
-            opacity: 0;
-        }
-
-        @keyframes loader-animation {
-            from {
-                transform: rotate(0);
-            }
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        #calculate-button.loading {
-            color: transparent;
-        }
-
-        #calculate-button.loading::after {
-            opacity: 1;
-        }
-
-        /* Tablet and larger */
-        @media (min-width: 600px) {
-            #header {
-                padding: 1.2em 2em;
-                margin-bottom: 2em;
-            }
-
-            #header-logo {
-                height: 2em;
-                width: 2em;
-            }
-
-            #header h1 {
-                font-size: 1.4em;
-            }
-
-            #locations-form-div {
-                padding: 2em;
-                margin-bottom: 2em;
-            }
-
-            .error-block {
-                padding: 2em;
-                margin-bottom: 2em;
-            }
-
-            .search-results {
-                height: 30em;
-                padding: 0;
-                margin-bottom: 2em;
-            }
-
-            .search-header {
-                padding: 1em;
-            }
-
-            .search-header h3 {
-                font-size: 1.17em;
-            }
-
-            .search-result {
-                padding: 1em;
-                border: none;
-                margin: 0.5em 1em;
-                border-radius: 5px;
-                border: 2px solid black;
-                font-size: 1em;
-            }
-
-            .search-result:hover {
-                background-color: #bbb;
-                transform: translateY(-3px);
-            }
-
-            .search-result:active {
-                background-color: #ddd;
-                transform: translateY(1px);
-            }
-
-            .prediction-item {
-                padding: 0.85em;
-                font-size: 0.95em;
-            }
-        }
-
-        /* Desktop */
-        @media (min-width: 1024px) {
-            .search-results {
-                height: 35em;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='/css/base.light.css')}}" id="light-theme">
+    <link rel="stylesheet" href="{{ url_for('static', filename='/css/base.dark.css')}}" id="dark-theme" disabled>
+    <link rel="stylesheet" href="{{ url_for('static', filename='/css/theme-button.css')}}">
 </head>
 
 <body>
@@ -506,7 +83,25 @@
                 <p>Webapp Version: {{ webapp_version }}</p>
             </div>
         </div>
-
+        <div id="theme-button-container">
+            
+            <button id="theme-button" state="light">
+            <svg class="moon-icon" width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M150.696 44.9968C153.44 41.0163 153.641 35.8105 151.215 31.6291C148.789 27.4478 144.169 25.0405 139.351 25.4474C75.2939 30.8585 25 84.549 25 150C25 219.035 80.9644 275 150 275C215.45 275 269.141 224.705 274.552 160.648C274.959 155.83 272.551 151.21 268.37 148.784C264.189 146.358 258.984 146.56 255.002 149.304C242.926 157.628 228.301 162.5 212.5 162.5C171.079 162.5 137.5 128.921 137.5 87.4995C137.5 71.6986 142.373 57.0734 150.696 44.9968Z" fill="white"/>
+                </svg>
+                <svg class="sun-icon" width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M146.875 68.75C139.971 68.75 134.375 63.1535 134.375 56.25V25C134.375 18.0965 139.971 12.5 146.875 12.5H153.125C160.029 12.5 165.625 18.0965 165.625 25V56.25C165.625 63.1535 160.029 68.75 153.125 68.75H146.875Z" fill="white"/>
+                    <path d="M205.242 90.3372C200.361 85.4557 200.361 77.5411 205.242 72.6596L227.34 50.5625C232.221 45.6809 240.136 45.6809 245.017 50.5625L249.436 54.9819C254.319 59.8635 254.319 67.778 249.436 72.6596L227.34 94.7566C222.459 99.6382 214.544 99.6382 209.662 94.7566L205.242 90.3372Z" fill="white"/>
+                    <path d="M231.25 146.875C231.25 139.971 236.846 134.375 243.75 134.375H275C281.904 134.375 287.5 139.971 287.5 146.875V153.125C287.5 160.029 281.904 165.625 275 165.625H243.75C236.846 165.625 231.25 160.029 231.25 153.125V146.875Z" fill="white"/>
+                    <path d="M209.66 205.242C214.541 200.361 222.456 200.361 227.338 205.242L249.435 227.34C254.316 232.221 254.316 240.136 249.435 245.017L245.015 249.436C240.134 254.319 232.219 254.319 227.338 249.436L205.24 227.34C200.359 222.459 200.359 214.544 205.24 209.662L209.66 205.242Z" fill="white"/>
+                    <path d="M153.125 231.25C160.029 231.25 165.625 236.846 165.625 243.75V275C165.625 281.904 160.029 287.5 153.125 287.5H146.875C139.971 287.5 134.375 281.904 134.375 275V243.75C134.375 236.846 139.971 231.25 146.875 231.25H153.125Z" fill="white"/>
+                    <path d="M94.7574 209.663C99.6389 214.544 99.6389 222.459 94.7574 227.34L72.6603 249.438C67.7788 254.319 59.8641 254.319 54.9826 249.438L50.5631 245.018C45.6816 240.136 45.6816 232.223 50.5631 227.34L72.6603 205.244C77.5418 200.361 85.4564 200.361 90.3379 205.244L94.7574 209.663Z" fill="white"/>
+                    <path d="M68.75 153.125C68.75 160.029 63.1535 165.625 56.25 165.625H25C18.0965 165.625 12.5 160.029 12.5 153.125V146.875C12.5 139.971 18.0965 134.375 25 134.375H56.25C63.1535 134.375 68.75 139.971 68.75 146.875V153.125Z" fill="white"/>
+                    <path d="M90.3403 94.7574C85.4588 99.6389 77.5441 99.6389 72.6626 94.7574L50.5655 72.6603C45.684 67.7788 45.684 59.8641 50.5655 54.9826L54.985 50.5631C59.8665 45.6816 67.781 45.6816 72.6626 50.5631L94.7598 72.6603C99.6413 77.5418 99.6413 85.4564 94.7598 90.3379L90.3403 94.7574Z" fill="white"/>
+                    <path d="M87.5 150C87.5 115.482 115.482 87.5 150 87.5C184.517 87.5 212.5 115.482 212.5 150C212.5 184.517 184.517 212.5 150 212.5C115.482 212.5 87.5 184.517 87.5 150Z" fill="white"/>
+                </svg>
+            </button>
+        </div>
     <script>
         let startCoords = null;
         let destCoords = null;
@@ -553,12 +148,12 @@
 
         // Predictive search functionality
         let searchTimeout = null;
-        const DEBOUNCE_DELAY = 300;
+        let DEBOUNCE_DELAY = 300;
 
         function setupPredictiveSearch(inputId, dropdownId, clearButtonId, locationType) {
-            const input = document.getElementById(inputId);
-            const dropdown = document.getElementById(dropdownId);
-            const clearButton = document.getElementById(clearButtonId);
+            let input = document.getElementById(inputId);
+            let dropdown = document.getElementById(dropdownId);
+            let clearButton = document.getElementById(clearButtonId);
 
             // Clear button functionality
             clearButton.onclick = () => {
@@ -579,7 +174,7 @@
             };
 
             input.addEventListener('input', (e) => {
-                const query = e.target.value.trim();
+                let query = e.target.value.trim();
                 
                 clearTimeout(searchTimeout);
                 
@@ -601,7 +196,7 @@
                             }
 
                             predictions.forEach((pred) => {
-                                const item = document.createElement('div');
+                                let item = document.createElement('div');
                                 item.className = 'prediction-item';
                                 item.textContent = pred.name;
                                 item.dataset.coords = JSON.stringify(pred.coords);
@@ -701,7 +296,7 @@
         let rect = element.getBoundingClientRect();
         return rect
     }
-    const animBtn = document.getElementById("calculate-button");
+    let animBtn = document.getElementById("calculate-button");
     animBtn.addEventListener('click', () => {
         var btnPos = elementPosition(animBtn);
         var btnStyleEle = document.createElement("style");
@@ -715,6 +310,7 @@
         animBtn.classList.add("loading");
     });
     </script>
+    <script src="{{ url_for('static', filename='/js/theme-button.js')}}"></script>
 </body>
 
 </html>
