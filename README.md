@@ -18,9 +18,8 @@ leetRoute picks your route based on criteria **you** set, optimizing for the dri
 
 ## current status
 
-leetRoute is still very much in the works. A basic demo is currently live and being updated over at [leetroute.vercel.app](https://leetroute.vercel.app), however **none of the promised core functionality exists... yet!**
-
-This is a working preview of the UI and engine - the optimized route engine is coming soon.
+leetRoute is actively being developed! A demo is live at [leetroute.vercel.app](https://leetroute.vercel.app) with basic routing and export functionality.
+This is a working preview of the UI and engine - the ***Super-Cool Route Optimization-otron*** (SCRO) is coming soon.
 
 ## current features
 
@@ -56,7 +55,7 @@ TOO BAD, i'd love to but i have to figure out API key stuff lol
 - [x] KML export
 - [x] JSON export
 - [ ] **Route optimization engine** (priority!)
-- [ ] Using turn analyisis in routing
+- [ ] Using turn analysis in routing
 - [ ] Speed limit data integration
 - [ ] Route comparison tool
 - [ ] Share routes
@@ -81,4 +80,4 @@ Feel free to yell at me (or send constructive feedback) at [https://github.com/s
 
 ---
 
-**note**: this is a passion project for driving enthusiasts. obviously drive responsibly. 🚗💨
+**note**: this is a passion project for driving enthusiasts. obviously drive responsibly, but im not telling you what to do
